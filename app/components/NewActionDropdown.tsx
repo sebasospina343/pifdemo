@@ -1,0 +1,90 @@
+import { useContext } from "react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { CardContext, Card } from "../page"
+
+export default function NewActionDropdown() {
+  const context = useContext(CardContext)
+  // Type assertion needed because CardContextType incorrectly types cards as HTMLDivElement[]
+  // but it's actually Card[] in practice
+  const cards = context.cards as unknown as Card[]
+  const setCards = context.setCards as unknown as React.Dispatch<
+    React.SetStateAction<Card[]>
+  >
+  const { setLines, smoothCurve } = context
+
+  const handleAddCard = () => {
+    const newCardId = String(cards.length + 1)
+    const previousCardId = cards.length > 0 ? cards[cards.length - 1].id : null
+
+    // Add the new card
+    setCards([...cards, { id: newCardId }])
+
+    // If there's a previous card, create a line connecting them
+    if (previousCardId) {
+      // Wait for the DOM to update so we can find the new card's connector
+      // Use requestAnimationFrame to ensure the DOM has been painted
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const fromConnector = document.querySelector(
+            `[data-card-id="${previousCardId}"]`
+          ) as HTMLDivElement | null
+          const toConnector = document.querySelector(
+            `[data-card-id="${newCardId}"]`
+          ) as HTMLDivElement | null
+
+          if (fromConnector && toConnector) {
+            const fromRect = fromConnector.getBoundingClientRect()
+            const toRect = toConnector.getBoundingClientRect()
+
+            const start = {
+              x: fromRect.x + fromRect.width / 2,
+              y: fromRect.y + fromRect.height / 2,
+            }
+
+            const end = {
+              x: toRect.x + toRect.width / 2,
+              y: toRect.y + toRect.height / 2,
+            }
+
+            const newPoints = smoothCurve(start, end)
+            const pointsPath = `M${start.x},${start.y} C${newPoints
+              .map((point, idx) =>
+                idx > newPoints.length - 3 ? "" : `${point.x},${point.y}`
+              )
+              .join(" ")} ${end.x},${end.y}`
+
+            // Use functional update to ensure we have the latest lines state
+            setLines((prevLines) => {
+              const newLineId = prevLines.length + 1
+              return [
+                ...prevLines,
+                {
+                  id: newLineId,
+                  points: pointsPath,
+                  from: fromConnector,
+                  to: toConnector,
+                },
+              ]
+            })
+          }
+        })
+      })
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger>Add Step</DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem onClick={handleAddCard}>Card</DropdownMenuItem>
+        <DropdownMenuItem>Action</DropdownMenuItem>
+        <DropdownMenuItem>Transformer</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}

@@ -26,6 +26,11 @@ type CardContextType = {
   recalculateLinesForElement: (element: HTMLDivElement) => void
   cards: HTMLDivElement[]
   setCards: (cards: HTMLDivElement[]) => void
+  smoothCurve: (
+    start: { x: number; y: number },
+    end: { x: number; y: number },
+    steps?: number
+  ) => Array<{ x: number; y: number }>
 }
 export type Card = {
   id: string
@@ -45,6 +50,7 @@ export const CardContext = createContext<CardContextType>({
   recalculateLinesForElement: () => {},
   cards: [],
   setCards: () => {},
+  smoothCurve: () => [],
 })
 
 export default function Home() {
@@ -214,14 +220,17 @@ export default function Home() {
           dropPoint,
           setDropPoint,
           recalculateLinesForElement,
-          cards,
-          setCards,
+          cards: cards as unknown as HTMLDivElement[],
+          setCards: setCards as unknown as React.Dispatch<
+            React.SetStateAction<HTMLDivElement[]>
+          >,
+          smoothCurve,
         }}
       >
         <DraggableSurface>
           <main className="flex flex-col gap-4 items-center justify-center">
             {cards.map((card) => (
-              <DraggableCard key={card.id} />
+              <DraggableCard key={card.id} cardId={card.id} />
             ))}
           </main>
 

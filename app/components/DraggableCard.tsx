@@ -1,8 +1,12 @@
 import { useContext, useEffect, useRef, useState } from "react"
 import { CardContext } from "../page"
-import { Button } from "@/components/ui/button"
+import NewActionDropdown from "./NewActionDropdown"
 
-export default function DraggableCard() {
+interface DraggableCardProps {
+  cardId: string
+}
+
+export default function DraggableCard({ cardId }: DraggableCardProps) {
   const {
     setStartDragPoint,
     setDrawingArrow,
@@ -15,8 +19,6 @@ export default function DraggableCard() {
     currentHoverElement,
     setDropPoint,
     recalculateLinesForElement,
-    cards,
-    setCards,
   } = useContext(CardContext)
   const dotConnectorRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -120,14 +122,13 @@ export default function DraggableCard() {
       onMouseEnter={handleMouseEnter}
       onMouseDown={handleDragging}
     >
-      <Button onClick={() => setCards([...cards, { id: cards.length + 1 }])}>
-        Add Card
-      </Button>
       <div
         ref={dotConnectorRef}
+        data-card-id={cardId}
         className="connectorDot absolute bottom-0 left-[50%] translate-x-[-50%] w-[10px] h-[10px] bg-red-500"
         onMouseDown={handleMouseDown}
       />
+      <NewActionDropdown />
     </div>
   )
 }
