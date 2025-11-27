@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useEffect, createContext } from "react"
+import { useState, useEffect, createContext, useContext } from "react"
 import DraggableCard from "./components/DraggableCard"
 import DraggableSurface from "./components/DraggableSurface"
+import { Button } from "@/components/ui/button"
+import { TrashIcon } from "lucide-react"
 
 type Line = {
   id: number
@@ -31,10 +33,74 @@ type CardContextType = {
     end: { x: number; y: number },
     steps?: number
   ) => Array<{ x: number; y: number }>
+  deleteCard: (cardId: string) => void
+  deleteLine: (lineId: number) => void
+  getLineMidpoint: (line: Line) => { x: number; y: number } | null
 }
 export type Card = {
   id: string
 }
+
+function LineWithDeleteButton({
+  line,
+  midpoint,
+}: {
+  line: Line
+  midpoint: { x: number; y: number } | null
+}) {
+  if (!midpoint) return null
+
+  return (
+    <div className="line-container">
+      <svg
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          pointerEvents: "none",
+        }}
+      >
+        <path d={line.points} stroke="#B8B6B6" fill="none" strokeWidth="1" />
+      </svg>
+      <LineDeleteButton lineId={line.id} x={midpoint.x} y={midpoint.y} />
+    </div>
+  )
+}
+
+function LineDeleteButton({
+  lineId,
+  x,
+  y,
+}: {
+  lineId: number
+  x: number
+  y: number
+}) {
+  const { deleteLine } = useContext(CardContext)
+
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      className="absolute rounded-full w-8 h-8 p-0 bg-white hover:bg-red-50 border-red-200 hover:border-red-400 z-50 shadow-sm transition-opacity"
+      style={{
+        left: `${x}px`,
+        top: `${y}px`,
+        transform: "translate(-50%, -50%)",
+        pointerEvents: "auto",
+      }}
+      onClick={(e) => {
+        e.stopPropagation()
+        deleteLine(lineId)
+      }}
+    >
+      <TrashIcon className="w-4 h-4 text-red-600" />
+    </Button>
+  )
+}
+
 export const CardContext = createContext<CardContextType>({
   setStartDragPoint: () => {},
   setDrawingArrow: () => {},
@@ -51,6 +117,9 @@ export const CardContext = createContext<CardContextType>({
   cards: [],
   setCards: () => {},
   smoothCurve: () => [],
+  deleteCard: () => {},
+  deleteLine: () => {},
+  getLineMidpoint: () => null,
 })
 
 export default function Home() {
@@ -132,6 +201,51 @@ export default function Home() {
         }
       })
     )
+  }
+
+  const deleteCard = (cardId: string) => {
+    // Find the connector dot element for this card
+    const connectorDot = document.querySelector(
+      `[data-card-id="${cardId}"]`
+    ) as HTMLDivElement | null
+
+    // Remove the card from the cards array
+    setCards((prevCards) => prevCards.filter((card) => card.id !== cardId))
+
+    // Remove all lines connected to this card's connector dot
+    if (connectorDot) {
+      setLines((prevLines) =>
+        prevLines.filter(
+          (line) => line.from !== connectorDot && line.to !== connectorDot
+        )
+      )
+    }
+  }
+
+  const deleteLine = (lineId: number) => {
+    setLines((prevLines) => prevLines.filter((line) => line.id !== lineId))
+  }
+
+  const getLineMidpoint = (line: Line): { x: number; y: number } | null => {
+    if (!line.from || !line.to) return null
+
+    const fromRect = line.from.getBoundingClientRect()
+    const toRect = line.to.getBoundingClientRect()
+
+    const start = {
+      x: fromRect.x + fromRect.width / 2,
+      y: fromRect.y + fromRect.height / 2,
+    }
+
+    const end = {
+      x: toRect.x + toRect.width / 2,
+      y: toRect.y + toRect.height / 2,
+    }
+
+    // Calculate the midpoint on the curve
+    const curvePoints = smoothCurve(start, end)
+    const midpointIndex = Math.floor(curvePoints.length / 2)
+    return curvePoints[midpointIndex]
   }
 
   useEffect(() => {
@@ -225,6 +339,9 @@ export default function Home() {
             React.SetStateAction<HTMLDivElement[]>
           >,
           smoothCurve,
+          deleteCard,
+          deleteLine,
+          getLineMidpoint,
         }}
       >
         <DraggableSurface>
@@ -234,26 +351,16 @@ export default function Home() {
             ))}
           </main>
 
-          {lines.map((line) => (
-            <svg
-              key={line.id}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100vw",
-                height: "100vh",
-                pointerEvents: "none",
-              }}
-            >
-              <path
-                d={line.points}
-                stroke="#B8B6B6"
-                fill="none"
-                strokeWidth="1"
+          {lines.map((line) => {
+            const midpoint = getLineMidpoint(line)
+            return (
+              <LineWithDeleteButton
+                key={line.id}
+                line={line}
+                midpoint={midpoint}
               />
-            </svg>
-          ))}
+            )
+          })}
         </DraggableSurface>
       </CardContext>
     </div>

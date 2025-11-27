@@ -29,6 +29,7 @@ export default function DraggableCard({ cardId }: DraggableCardProps) {
     currentHoverElement,
     setDropPoint,
     recalculateLinesForElement,
+    deleteCard,
   } = useContext(CardContext)
   const dotConnectorRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
@@ -159,7 +160,13 @@ export default function DraggableCard({ cardId }: DraggableCardProps) {
       </CardContent>
       <CardFooter className="flex justify-between">
         <NewActionDropdown />
-        <Button variant="outline">
+        <Button
+          variant="outline"
+          onClick={(e) => {
+            e.stopPropagation()
+            deleteCard(cardId)
+          }}
+        >
           <TrashIcon />
         </Button>
       </CardFooter>
