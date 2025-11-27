@@ -1,4 +1,5 @@
 import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+import { useContext } from "react"
 
 import {
   Sidebar,
@@ -12,6 +13,10 @@ import {
 } from "@/components/ui/sidebar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import MenuDataSource from "./MenuDataSource"
+import MenuTransformer from "./MenuTransformer"
+import MenuLookup from "./MenuLookup"
+import MenuDestination from "./MenuDestination"
+import { CardContext, Card } from "../page"
 
 // Menu items.
 const items = [
@@ -43,6 +48,15 @@ const items = [
 ]
 
 export default function AppSidebar() {
+  const context = useContext(CardContext)
+  const cards = context.cards as unknown as Card[]
+  const selectedCardId = context.selectedCardId
+
+  // Find the selected card
+  const selectedCard = selectedCardId
+    ? cards.find((card) => card.id === selectedCardId)
+    : null
+
   return (
     <Sidebar
       variant="floating"
@@ -51,7 +65,15 @@ export default function AppSidebar() {
     >
       <ScrollArea className="h-full w-full">
         <SidebarContent>
-          <MenuDataSource />
+          {selectedCard?.type === "transformer" ? (
+            <MenuTransformer />
+          ) : selectedCard?.type === "lookup" ? (
+            <MenuLookup />
+          ) : selectedCard?.type === "destination" ? (
+            <MenuDestination />
+          ) : (
+            <MenuDataSource />
+          )}
         </SidebarContent>
       </ScrollArea>
     </Sidebar>

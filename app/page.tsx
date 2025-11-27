@@ -36,9 +36,14 @@ type CardContextType = {
   deleteCard: (cardId: string) => void
   deleteLine: (lineId: number) => void
   getLineMidpoint: (line: Line) => { x: number; y: number } | null
+  selectedCardId: string | null
+  setSelectedCardId: (cardId: string | null) => void
+  sidebarOpen: boolean | undefined
+  setSidebarOpen: (open: boolean) => void
 }
 export type Card = {
   id: string
+  type?: "transformer" | "lookup" | "destination"
 }
 
 function LineWithDeleteButton({
@@ -120,6 +125,10 @@ export const CardContext = createContext<CardContextType>({
   deleteCard: () => {},
   deleteLine: () => {},
   getLineMidpoint: () => null,
+  selectedCardId: null,
+  setSelectedCardId: () => {},
+  sidebarOpen: false,
+  setSidebarOpen: () => {},
 })
 
 export default function Home() {
@@ -135,6 +144,8 @@ export default function Home() {
     useState<HTMLDivElement | null>(null)
   const [dropPoint, setDropPoint] = useState<HTMLDivElement | null>(null)
   const [cards, setCards] = useState<Card[]>([])
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   function smoothCurve(
     start: { x: number; y: number },
@@ -342,6 +353,10 @@ export default function Home() {
           deleteCard,
           deleteLine,
           getLineMidpoint,
+          selectedCardId,
+          setSelectedCardId,
+          sidebarOpen,
+          setSidebarOpen,
         }}
       >
         <DraggableSurface>

@@ -30,12 +30,16 @@ export default function DraggableCard({ cardId }: DraggableCardProps) {
     setDropPoint,
     recalculateLinesForElement,
     deleteCard,
+    selectedCardId,
+    setSelectedCardId,
   } = useContext(CardContext)
   const dotConnectorRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
 
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
+  const dragStartPosition = useRef<{ x: number; y: number } | null>(null)
+  const wasDragging = useRef(false)
 
   const dragStateRef = useRef<{
     startMouseX: number
@@ -78,6 +82,8 @@ export default function DraggableCard({ cardId }: DraggableCardProps) {
     const mouseX = e.clientX
     const mouseY = e.clientY
 
+    dragStartPosition.current = { x: mouseX, y: mouseY }
+
     dragStateRef.current = {
       startMouseX: mouseX,
       startMouseY: mouseY,
@@ -86,6 +92,15 @@ export default function DraggableCard({ cardId }: DraggableCardProps) {
     }
 
     setIsDragging(true)
+  }
+
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only select the card if we didn't drag
+    if (!wasDragging.current) {
+      e.stopPropagation()
+      setSelectedCardId(cardId)
+    }
+    wasDragging.current = false
   }
 
   useEffect(() => {
@@ -97,6 +112,11 @@ export default function DraggableCard({ cardId }: DraggableCardProps) {
       const { startMouseX, startMouseY, startX, startY } = dragStateRef.current
       const deltaX = e.clientX - startMouseX
       const deltaY = e.clientY - startMouseY
+
+      // If we moved more than 5 pixels, mark as dragging
+      if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+        wasDragging.current = true
+      }
 
       setPosition({
         x: startX + deltaX,
@@ -111,6 +131,7 @@ export default function DraggableCard({ cardId }: DraggableCardProps) {
     const handleMouseUp = () => {
       setIsDragging(false)
       dragStateRef.current = null
+      dragStartPosition.current = null
     }
 
     document.addEventListener("mousemove", handleMouseMove)
@@ -143,7 +164,11 @@ export default function DraggableCard({ cardId }: DraggableCardProps) {
     // </div>
 
     <Card
-      className="draggable-card relative z-50"
+      className={`draggable-card relative z-50 transition-all duration-200 ${
+        selectedCardId === cardId
+          ? "ring-4 ring-blue-500 ring-opacity-75 shadow-[0_0_20px_rgba(59,130,246,0.6)]"
+          : ""
+      }`}
       ref={cardRef}
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
@@ -151,6 +176,7 @@ export default function DraggableCard({ cardId }: DraggableCardProps) {
       }}
       onMouseEnter={handleMouseEnter}
       onMouseDown={handleDragging}
+      onClick={handleCardClick}
     >
       <CardHeader>
         <CardTitle>Card Title</CardTitle>
