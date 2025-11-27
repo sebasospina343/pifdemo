@@ -6,6 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CardContext, Card } from "../page"
+import { Button } from "@/components/ui/button"
 
 export default function NewActionDropdown() {
   const context = useContext(CardContext)
@@ -79,7 +80,9 @@ export default function NewActionDropdown() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>Add Step</DropdownMenuTrigger>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">Add Step</Button>
+      </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem onClick={handleAddCard}>Card</DropdownMenuItem>
         <DropdownMenuItem>Action</DropdownMenuItem>

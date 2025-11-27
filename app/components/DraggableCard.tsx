@@ -2,6 +2,16 @@ import { useContext, useEffect, useRef, useState } from "react"
 import { CardContext } from "../page"
 import NewActionDropdown from "./NewActionDropdown"
 
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { TrashIcon } from "lucide-react"
+
 interface DraggableCardProps {
   cardId: string
 }
@@ -112,9 +122,28 @@ export default function DraggableCard({ cardId }: DraggableCardProps) {
   }, [isDragging, recalculateLinesForElement])
 
   return (
-    <div
+    // <div
+    //   ref={cardRef}
+    //   className="draggable-card w-[200px] h-[200px] bg-gray-500 relative z-50"
+    //   style={{
+    //     transform: `translate(${position.x}px, ${position.y}px)`,
+    //     cursor: isDragging ? "grabbing" : "grab",
+    //   }}
+    //   onMouseEnter={handleMouseEnter}
+    //   onMouseDown={handleDragging}
+    // >
+    //   <div
+    //     ref={dotConnectorRef}
+    //     data-card-id={cardId}
+    //     className="connectorDot absolute bottom-0 left-[50%] translate-x-[-50%] w-[10px] h-[10px] bg-red-500"
+    //     onMouseDown={handleMouseDown}
+    //   />
+    //   <NewActionDropdown />
+    // </div>
+
+    <Card
+      className="draggable-card relative z-50"
       ref={cardRef}
-      className="draggable-card w-[200px] h-[200px] bg-gray-500 relative z-50"
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
         cursor: isDragging ? "grabbing" : "grab",
@@ -122,13 +151,24 @@ export default function DraggableCard({ cardId }: DraggableCardProps) {
       onMouseEnter={handleMouseEnter}
       onMouseDown={handleDragging}
     >
+      <CardHeader>
+        <CardTitle>Card Title</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p>Card Content</p>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <NewActionDropdown />
+        <Button variant="outline">
+          <TrashIcon />
+        </Button>
+      </CardFooter>
       <div
         ref={dotConnectorRef}
         data-card-id={cardId}
         className="connectorDot absolute bottom-0 left-[50%] translate-x-[-50%] w-[10px] h-[10px] bg-red-500"
         onMouseDown={handleMouseDown}
       />
-      <NewActionDropdown />
-    </div>
+    </Card>
   )
 }
